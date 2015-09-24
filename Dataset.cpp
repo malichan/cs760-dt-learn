@@ -58,6 +58,7 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
     Dataset* dataset = new Dataset;
     
     string line;
+    int numOfFeatures = 0;
     bool header = true;
     while (finTrain.good()) {
         getline(finTrain, line);
@@ -68,36 +69,37 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
         if (header) {
             string lineType = toLower(tokens[0]);
             if (lineType == "@relation") {
-                dataset->name = tokens[1];
+                dataset->metadata->name = tokens[1];
             } else if (lineType == "@attribute") {
                 string featureName = tokens[1];
                 string featureType = toLower(tokens[2]);
-                if (featureType == "numeric" || featureType == "integer" || featureType == "real") {
-                    Feature* f = new NumericFeature(featureName);
-                    dataset->featureList.push_back(f);
+                if (featureName == "class") {
+                    vector<string> vals(tokens.begin() + 2, tokens.end());
+                    Feature* f = new NominalFeature(-1, featureName, vals);
+                    dataset->metadata->classVariable = f;
+                } else if (featureType == "numeric" || featureType == "integer" || featureType == "real") {
+                    Feature* f = new NumericFeature(numOfFeatures++, featureName);
+                    dataset->metadata->featureList.push_back(f);
                 } else {
                     vector<string> vals(tokens.begin() + 2, tokens.end());
-                    Feature* f = new NominalFeature(featureName, vals);
-                    if (featureName == "class")
-                        dataset->classVariable = f;
-                    else
-                        dataset->featureList.push_back(f);
+                    Feature* f = new NominalFeature(numOfFeatures++, featureName, vals);
+                    dataset->metadata->featureList.push_back(f);
                 }
             } else if (lineType == "@data") {
                 header = false;
-                dataset->numOfFeatures = (int)dataset->featureList.size();
+                dataset->metadata->numOfFeatures = (int)dataset->metadata->featureList.size();
             }
         } else {
-            if (tokens.size() != dataset->numOfFeatures + 1) {
+            if (tokens.size() != numOfFeatures + 1) {
                 cerr << "Error parsing \"" << line << "\"." << endl;
             }
-            Instance inst(dataset->numOfFeatures);
-            for (int i = 0; i < dataset->numOfFeatures; ++i) {
-                double internal = dataset->featureList[i]->convertValueToInternal(tokens[i]);
-                inst.featureVector[i] = internal;
+            Instance* inst = new Instance(numOfFeatures);
+            for (int i = 0; i < numOfFeatures; ++i) {
+                double internal = dataset->metadata->featureList[i]->convertValueToInternal(tokens[i]);
+                inst->featureVector[i] = internal;
             }
-            double classInternal = dataset->classVariable->convertValueToInternal(tokens[dataset->numOfFeatures]);
-            inst.classLabel = classInternal;
+            double classInternal = dataset->metadata->classVariable->convertValueToInternal(tokens[numOfFeatures]);
+            inst->classLabel = classInternal;
             dataset->trainSet.push_back(inst);
         }
     }
@@ -115,16 +117,16 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
                 header = false;
             }
         } else {
-            if (tokens.size() != dataset->numOfFeatures + 1) {
+            if (tokens.size() != numOfFeatures + 1) {
                 cerr << "Error parsing \"" << line << "\"." << endl;
             }
-            Instance inst(dataset->numOfFeatures);
-            for (int i = 0; i < dataset->numOfFeatures; ++i) {
-                double internal = dataset->featureList[i]->convertValueToInternal(tokens[i]);
-                inst.featureVector[i] = internal;
+            Instance* inst = new Instance(numOfFeatures);
+            for (int i = 0; i < numOfFeatures; ++i) {
+                double internal = dataset->metadata->featureList[i]->convertValueToInternal(tokens[i]);
+                inst->featureVector[i] = internal;
             }
-            double classInternal = dataset->classVariable->convertValueToInternal(tokens[dataset->numOfFeatures]);
-            inst.classLabel = classInternal;
+            double classInternal = dataset->metadata->classVariable->convertValueToInternal(tokens[numOfFeatures]);
+            inst->classLabel = classInternal;
             dataset->testSet.push_back(inst);
         }
     }
@@ -136,50 +138,50 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
 }
 
 void Dataset::print() {
-    cout << "@relation " << name << endl;
-    for (int i = 0; i < numOfFeatures; ++i) {
-        Feature* feature = featureList[i];
+    cout << "@relation " << metadata->name << endl;
+    for (int i = 0; i < metadata->numOfFeatures; ++i) {
+        Feature* feature = metadata->featureList[i];
         cout << "@attribute '" << feature->getName() << "' ";
         if (feature->getType() == "numeric") {
             cout << "numeric" << endl;
-        } else if (feature->getType() == "nominal") {
+        } else {
             cout << "{'" << feature->convertInternalToValue(0) << "'";
             for (int j = 1; j < feature->getRange(); ++j)
                 cout << ",'" << feature->convertInternalToValue(j) << "'";
             cout << "}" << endl;
         }
     }
-    cout << "@attribute '" << classVariable->getName() << "' ";
-    cout << "{'" << classVariable->convertInternalToValue(0) << "'";
-    for (int j = 1; j < classVariable->getRange(); ++j)
-        cout << ",'" << classVariable->convertInternalToValue(j) << "'";
+    cout << "@attribute '" << metadata->classVariable->getName() << "' ";
+    cout << "{'" << metadata->classVariable->convertInternalToValue(0) << "'";
+    for (int j = 1; j < metadata->classVariable->getRange(); ++j)
+        cout << ",'" << metadata->classVariable->convertInternalToValue(j) << "'";
     cout << "}" << endl;
     
     cout << "@data" << endl;
     
     cout << "%Training" << endl;
     for (int i = 0; i < trainSet.size(); ++i) {
-        Instance& inst = trainSet[i];
-        for (int j = 0; j < numOfFeatures; ++j) {
-            string val = featureList[j]->convertInternalToValue(inst.featureVector[j]);
-            if (featureList[j]->getType() == "numeric")
+        Instance* inst = trainSet[i];
+        for (int j = 0; j < metadata->numOfFeatures; ++j) {
+            string val = metadata->featureList[j]->convertInternalToValue(inst->featureVector[j]);
+            if (metadata->featureList[j]->getType() == "numeric")
                 cout << val << ",";
-            else if (featureList[j]->getType() == "nominal")
+            else
                 cout << "'" << val << "',";
         }
-        cout << "'" << classVariable->convertInternalToValue(inst.classLabel) << "'" << endl;
+        cout << "'" << metadata->classVariable->convertInternalToValue(inst->classLabel) << "'" << endl;
     }
     
     cout << "%Testing" << endl;
     for (int i = 0; i < testSet.size(); ++i) {
-        Instance& inst = testSet[i];
-        for (int j = 0; j < numOfFeatures; ++j) {
-            string val = featureList[j]->convertInternalToValue(inst.featureVector[j]);
-            if (featureList[j]->getType() == "numeric")
+        Instance* inst = testSet[i];
+        for (int j = 0; j < metadata->numOfFeatures; ++j) {
+            string val = metadata->featureList[j]->convertInternalToValue(inst->featureVector[j]);
+            if (metadata->featureList[j]->getType() == "numeric")
                 cout << val << ",";
-            else if (featureList[j]->getType() == "nominal")
+            else
                 cout << "'" << val << "',";
         }
-        cout << "'" << classVariable->convertInternalToValue(inst.classLabel) << "'" << endl;
+        cout << "'" << metadata->classVariable->convertInternalToValue(inst->classLabel) << "'" << endl;
     }
 }

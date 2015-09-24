@@ -9,14 +9,19 @@ using namespace std;
 
 class Feature {
 private:
+    int index;
     string name;
     string type;
     int range;
     
 protected:
-    Feature(const string& name, const string& type, int range) : name(name), type(type), range(range) {}
+    Feature(int index, const string& name, const string& type, int range) : index(index), name(name), type(type), range(range) {}
     
 public:
+    int getIndex() const {
+        return index;
+    }
+    
     const string& getName() const {
         return name;
     }
@@ -30,18 +35,18 @@ public:
     }
     
     virtual ~Feature() {}
-    virtual double convertValueToInternal(const string& str) = 0;
-    virtual string convertInternalToValue(double val) = 0;
+    virtual double convertValueToInternal(const string& str) const = 0;
+    virtual string convertInternalToValue(double val) const = 0;
 };
 
 class NumericFeature : public Feature {
 private:
     
 public:
-    NumericFeature(const string& name) : Feature(name, "numeric", INT_MAX) {}
+    NumericFeature(int index, const string& name) : Feature(index, name, "numeric", INT_MAX) {}
     
-    virtual double convertValueToInternal(const string& str);
-    virtual string convertInternalToValue(double val);
+    virtual double convertValueToInternal(const string& str) const;
+    virtual string convertInternalToValue(double val) const;
 };
 
 class NominalFeature : public Feature {
@@ -51,7 +56,7 @@ private:
     unordered_map<string, int> nameToIdx;
     
 public:
-    NominalFeature(const string& name, const vector<string>& values) : Feature(name, "nominal", (int)values.size()), idxToName(values) {
+    NominalFeature(int index, const string& name, const vector<string>& values) : Feature(index, name, "nominal", (int)values.size()), idxToName(values) {
         numOfVals = (int)idxToName.size();
         for (int i = 0; i < numOfVals; ++i)
             nameToIdx[idxToName[i]] = i;
@@ -73,8 +78,8 @@ public:
             return -1;
     }
     
-    virtual double convertValueToInternal(const string& str);
-    virtual string convertInternalToValue(double val);
+    virtual double convertValueToInternal(const string& str) const;
+    virtual string convertInternalToValue(double val) const;
 };
 
 #endif /* Feature_hpp */

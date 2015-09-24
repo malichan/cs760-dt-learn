@@ -2,36 +2,60 @@
 #define Dataset_hpp
 
 #include "Feature.hpp"
+#include "Instance.hpp"
 
-class Dataset {
-private:
-    struct Instance {
-        vector<double> featureVector;
-        double classLabel;
-        
-        Instance(int numOfFeatures) : featureVector(numOfFeatures, -1), classLabel(-1) {}
-    };
-    
+struct DatasetMetadata {
+public:
     string name;
     int numOfFeatures;
     vector<Feature*> featureList;
     Feature* classVariable;
     
-    vector<Instance> trainSet;
-    vector<Instance> testSet;
+    DatasetMetadata() {}
+    ~DatasetMetadata() {
+        for (Feature* f : featureList)
+            if (f) delete f;
+        if (classVariable)
+            delete classVariable;
+    }
+};
+
+class Dataset {
+private:
+    DatasetMetadata* metadata;
     
-    Dataset() {}
+    vector<Instance*> trainSet;
+    vector<Instance*> testSet;
+    
+    Dataset() {
+        metadata = new DatasetMetadata;
+    }
 
 public:
     static Dataset* loadDataset(string trainFile, string testFile);
     
-    void print();
+    const DatasetMetadata* getMetadata() const {
+        return metadata;
+    }
+    
+    const vector<Instance*>& getTrainSet() const {
+        return trainSet;
+    }
+    
+    const vector<Instance*>& getTestSet() const {
+        return testSet;
+    }
     
     ~Dataset() {
-        for (Feature* f : featureList)
-            if (f) delete f;
-        if (classVariable) delete classVariable;
+        if (metadata)
+            delete metadata;
+        for (Instance* i : trainSet)
+            if (i) delete i;
+        for (Instance* i : testSet)
+            if (i) delete i;
     }
+    
+    void print();
 };
 
 #endif /* Dataset_hpp */
