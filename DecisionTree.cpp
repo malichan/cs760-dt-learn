@@ -1,4 +1,22 @@
+#include <sstream>
+
 #include "DecisionTree.hpp"
+
+string DecisionTreeNode::toString() const {
+    if (!parent)
+        return "";
+    
+    stringstream ss;
+    ss << parent->split->toString(parentLinkNo) << " [" << classCount[0];
+    for (int i = 1; i < classCount.size(); ++i)
+        ss << " " << classCount[i];
+    ss << "]";
+    
+    if (!split)
+        ss << ": " << owner->getMetadata()->classVariable->convertInternalToValue(classLabel);
+    
+    return ss.str();
+}
 
 void DecisionTree::buildDecisionTree(DecisionTreeNode* root, set<int>& featureIndices) {
     root->classCount.resize(metadata->numOfClasses);
@@ -50,22 +68,40 @@ void DecisionTree::buildDecisionTree(DecisionTreeNode* root, set<int>& featureIn
         splittedInsts[val].push_back(root->instances[i]);
     }
     
-    featureIndices.erase(featureIdx);
+    if (feature->getType() == "nominal")
+        featureIndices.erase(featureIdx);
     for (int i = 0; i < feature->getRange(); ++i) {
-        DecisionTreeNode* node = new DecisionTreeNode;
+        DecisionTreeNode* node = new DecisionTreeNode(this);
         node->parent = root;
         node->parentLinkNo = i;
         node->instances = splittedInsts[i];
         root->children.push_back(node);
+        buildDecisionTree(node, featureIndices);
     }
-    featureIndices.insert(featureIdx);
+    if (feature->getType() == "nominal")
+        featureIndices.insert(featureIdx);
 }
 
 DecisionTree::DecisionTree(const DatasetMetadata* metadata, const vector<Instance*>& instances, int stopThreshold) : root(0), metadata(metadata), stopThreshold(stopThreshold) {
-    root = new DecisionTreeNode;
+    root = new DecisionTreeNode(this);
     root->instances = instances;
     set<int> featureIndices;
     for (int i = 0; i < metadata->numOfFeatures; ++i)
         featureIndices.insert(i);
     buildDecisionTree(root, featureIndices);
+}
+
+void DecisionTree::printDecisionTree(DecisionTreeNode* node, int level, stringstream& ss) const {
+    for (int i = 0; i < level; ++i)
+        ss << "|\t";
+    ss << node->toString() << endl;
+    for (int i = 0; i < node->children.size(); ++i)
+        printDecisionTree(node->children[i], level + 1, ss);
+}
+
+string DecisionTree::toString() const {
+    stringstream ss;
+    for (int i = 0; i < root->children.size(); ++i)
+        printDecisionTree(root->children[i], 0, ss);
+    return ss.str();
 }

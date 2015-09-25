@@ -5,8 +5,12 @@
 
 #include "Split.hpp"
 
+class DecisionTree;
+
 struct DecisionTreeNode {
 public:
+    const DecisionTree* owner;
+    
     DecisionTreeNode* parent;
     int parentLinkNo;
     vector<Instance*> instances;
@@ -17,7 +21,7 @@ public:
     Split* split;
     vector<DecisionTreeNode*> children;
     
-    DecisionTreeNode() : parent(0), parentLinkNo(-1), instances(0), classLabel(-1), classCount(0), split(0), children(0) {}
+    DecisionTreeNode(const DecisionTree* owner) :owner(owner), parent(0), parentLinkNo(-1), instances(0), classLabel(-1), classCount(0), split(0), children(0) {}
     
     ~DecisionTreeNode() {
         for (DecisionTreeNode* node : children)
@@ -25,6 +29,8 @@ public:
         if (split)
             delete split;
     }
+    
+    string toString() const;
 };
 
 class DecisionTree {
@@ -34,13 +40,21 @@ private:
     int stopThreshold;
     
     void buildDecisionTree(DecisionTreeNode* root, set<int>& featureIndices);
+    void printDecisionTree(DecisionTreeNode* node, int level, stringstream& ss) const;
     
 public:
     DecisionTree(const DatasetMetadata* metadata, const vector<Instance*>& instances, int stopThreshold);
+    
     ~DecisionTree() {
         if (root)
             delete root;
     }
+    
+    const DatasetMetadata* getMetadata() const {
+        return metadata;
+    }
+    
+    string toString() const;
 };
 
 #endif /* DecisionTree_hpp */

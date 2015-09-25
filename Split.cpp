@@ -8,11 +8,14 @@ static double computeEntropy(const vector<int>& splitCount, int& allCount) {
     allCount = 0;
     for (int i = 0; i < classRange; ++i)
         allCount += splitCount[i];
+    if (allCount == 0)
+        return 0;
     
     double entropy = 0;
     for (int i = 0; i < classRange; ++i) {
         double freq = (double)splitCount[i] / allCount;
-        entropy -= freq * log2(freq);
+        if (freq > 0)
+            entropy -= freq * log2(freq);
     }
     
     return entropy;

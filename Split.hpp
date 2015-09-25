@@ -30,7 +30,7 @@ private:
     double threshold;
     
 public:
-    NumericSplit(const NumericFeature* feature, int threshold) : Split(feature), threshold(threshold) {}
+    NumericSplit(const NumericFeature* feature, double threshold) : Split(feature), threshold(threshold) {}
     
     virtual int split(const Instance* instance) const;
     virtual string toString(int index) const;
