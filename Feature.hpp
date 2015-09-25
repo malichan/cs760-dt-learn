@@ -35,6 +35,7 @@ public:
     }
     
     virtual ~Feature() {}
+    virtual string toString() const = 0;
     virtual double convertValueToInternal(const string& str) const = 0;
     virtual string convertInternalToValue(double val) const = 0;
 };
@@ -43,41 +44,25 @@ class NumericFeature : public Feature {
 private:
     
 public:
-    NumericFeature(int index, const string& name) : Feature(index, name, "numeric", INT_MAX) {}
+    NumericFeature(int index, const string& name) : Feature(index, name, "numeric", 2) {}
     
+    virtual string toString() const;
     virtual double convertValueToInternal(const string& str) const;
     virtual string convertInternalToValue(double val) const;
 };
 
 class NominalFeature : public Feature {
 private:
-    int numOfVals;
     vector<string> idxToName;
     unordered_map<string, int> nameToIdx;
     
 public:
     NominalFeature(int index, const string& name, const vector<string>& values) : Feature(index, name, "nominal", (int)values.size()), idxToName(values) {
-        numOfVals = (int)idxToName.size();
-        for (int i = 0; i < numOfVals; ++i)
+        for (int i = 0; i < getRange(); ++i)
             nameToIdx[idxToName[i]] = i;
     }
     
-    int getNumberOfValues() const {
-        return numOfVals;
-    }
-    
-    const string& getValueName(int index) const {
-        return idxToName.at(index);
-    }
-    
-    int getValueIndex(const string& name) const {
-        unordered_map<string, int>::const_iterator it = nameToIdx.find(name);
-        if (it != nameToIdx.end())
-            return it->second;
-        else
-            return -1;
-    }
-    
+    virtual string toString() const;
     virtual double convertValueToInternal(const string& str) const;
     virtual string convertInternalToValue(double val) const;
 };

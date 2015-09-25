@@ -4,10 +4,8 @@
 #include "Dataset.hpp"
 
 class Split {
-private:
-    const Feature* feature;
-    
 protected:
+    const Feature* feature;
     Split(const Feature* feature) : feature(feature) {}
     
 public:
@@ -18,6 +16,7 @@ public:
     }
     
     virtual int split(const Instance* instance) const = 0;
+    virtual string toString(int index) const = 0;
     
     virtual ~Split() {}
 };
@@ -30,6 +29,7 @@ public:
     NumericSplit(const NumericFeature* feature, int threshold) : Split(feature), threshold(threshold) {}
     
     virtual int split(const Instance* instance) const;
+    virtual string toString(int index) const;
 };
 
 class NominalSplit : public Split {
@@ -39,6 +39,7 @@ public:
     NominalSplit(const NominalFeature* feature) : Split(feature) {}
     
     virtual int split(const Instance* instance) const;
+    virtual string toString(int index) const;
 };
 
 #endif /* Split_hpp */

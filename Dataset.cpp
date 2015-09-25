@@ -1,4 +1,4 @@
-#include <iostream>
+#include <sstream>
 #include <fstream>
 #include <algorithm>
 
@@ -90,9 +90,6 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
                 dataset->metadata->numOfFeatures = (int)dataset->metadata->featureList.size();
             }
         } else {
-            if (tokens.size() != numOfFeatures + 1) {
-                cerr << "Error parsing \"" << line << "\"." << endl;
-            }
             Instance* inst = new Instance(numOfFeatures);
             for (int i = 0; i < numOfFeatures; ++i) {
                 double internal = dataset->metadata->featureList[i]->convertValueToInternal(tokens[i]);
@@ -117,9 +114,6 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
                 header = false;
             }
         } else {
-            if (tokens.size() != numOfFeatures + 1) {
-                cerr << "Error parsing \"" << line << "\"." << endl;
-            }
             Instance* inst = new Instance(numOfFeatures);
             for (int i = 0; i < numOfFeatures; ++i) {
                 double internal = dataset->metadata->featureList[i]->convertValueToInternal(tokens[i]);
@@ -137,51 +131,22 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
     return dataset;
 }
 
-void Dataset::print() {
-    cout << "@relation " << metadata->name << endl;
-    for (int i = 0; i < metadata->numOfFeatures; ++i) {
-        Feature* feature = metadata->featureList[i];
-        cout << "@attribute '" << feature->getName() << "' ";
-        if (feature->getType() == "numeric") {
-            cout << "numeric" << endl;
-        } else {
-            cout << "{'" << feature->convertInternalToValue(0) << "'";
-            for (int j = 1; j < feature->getRange(); ++j)
-                cout << ",'" << feature->convertInternalToValue(j) << "'";
-            cout << "}" << endl;
-        }
-    }
-    cout << "@attribute '" << metadata->classVariable->getName() << "' ";
-    cout << "{'" << metadata->classVariable->convertInternalToValue(0) << "'";
-    for (int j = 1; j < metadata->classVariable->getRange(); ++j)
-        cout << ",'" << metadata->classVariable->convertInternalToValue(j) << "'";
-    cout << "}" << endl;
+string Dataset::toString() const {
+    stringstream ss;
+    ss << "@relation " << metadata->name << endl;
+    for (int i = 0; i < metadata->numOfFeatures; ++i)
+        ss << metadata->featureList[i]->toString() << endl;
+    ss << metadata->classVariable->toString() << endl;
     
-    cout << "@data" << endl;
+    ss << "@data" << endl;
     
-    cout << "%Training" << endl;
-    for (int i = 0; i < trainSet.size(); ++i) {
-        Instance* inst = trainSet[i];
-        for (int j = 0; j < metadata->numOfFeatures; ++j) {
-            string val = metadata->featureList[j]->convertInternalToValue(inst->featureVector[j]);
-            if (metadata->featureList[j]->getType() == "numeric")
-                cout << val << ",";
-            else
-                cout << "'" << val << "',";
-        }
-        cout << "'" << metadata->classVariable->convertInternalToValue(inst->classLabel) << "'" << endl;
-    }
+    ss << "%Training" << endl;
+    for (int i = 0; i < trainSet.size(); ++i)
+        ss << trainSet[i]->toString(metadata) << endl;
     
-    cout << "%Testing" << endl;
-    for (int i = 0; i < testSet.size(); ++i) {
-        Instance* inst = testSet[i];
-        for (int j = 0; j < metadata->numOfFeatures; ++j) {
-            string val = metadata->featureList[j]->convertInternalToValue(inst->featureVector[j]);
-            if (metadata->featureList[j]->getType() == "numeric")
-                cout << val << ",";
-            else
-                cout << "'" << val << "',";
-        }
-        cout << "'" << metadata->classVariable->convertInternalToValue(inst->classLabel) << "'" << endl;
-    }
+    ss << "%Testing" << endl;
+    for (int i = 0; i < testSet.size(); ++i)
+        ss << testSet[i]->toString(metadata) << endl;
+    
+    return ss.str();
 }

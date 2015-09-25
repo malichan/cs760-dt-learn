@@ -1,5 +1,7 @@
 #include "Split.hpp"
 
+#include <sstream>
+
 static double computeEntropy(const vector<int>& splitCount, int& allCount) {
     int classRange = (int)splitCount.size();
     
@@ -117,4 +119,19 @@ int NumericSplit::split(const Instance* instance) const {
 
 int NominalSplit::split(const Instance* instance) const {
     return round(getValue(instance));
+}
+
+string NumericSplit::toString(int index) const {
+    stringstream ss;
+    if (index == 0)
+        ss << feature->getName() << " <= " << feature->convertInternalToValue(threshold);
+    else
+        ss << feature->getName() << " > " << feature->convertInternalToValue(threshold);
+    return ss.str();
+}
+
+string NominalSplit::toString(int index) const {
+    stringstream ss;
+    ss << feature->getName() << " = " << feature->convertInternalToValue(index);
+    return ss.str();
 }

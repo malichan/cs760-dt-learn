@@ -55,7 +55,7 @@ public:
             if (i) delete i;
     }
     
-    void print();
+    string toString() const;
 };
 
 #endif /* Dataset_hpp */
