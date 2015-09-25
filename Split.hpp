@@ -11,6 +11,10 @@ protected:
 public:
     static Split* createSplit(int featureIndex, const DatasetMetadata* metadata, const vector<Instance*>& instances, double* informationGain);
     
+    const Feature* getFeature() const {
+        return feature;
+    }
+    
     double getValue(const Instance* instance) const {
         return instance->featureVector[feature->getIndex()];
     }

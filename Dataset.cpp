@@ -87,7 +87,8 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
                 }
             } else if (lineType == "@data") {
                 header = false;
-                dataset->metadata->numOfFeatures = (int)dataset->metadata->featureList.size();
+                dataset->metadata->numOfClasses = dataset->metadata->classVariable->getRange();
+                dataset->metadata->numOfFeatures = numOfFeatures;
             }
         } else {
             Instance* inst = new Instance(numOfFeatures);

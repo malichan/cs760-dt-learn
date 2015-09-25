@@ -9,9 +9,10 @@ public:
     string name;
     int numOfFeatures;
     vector<Feature*> featureList;
+    int numOfClasses;
     Feature* classVariable;
     
-    DatasetMetadata() {}
+    DatasetMetadata() : name(""), numOfFeatures(-1), featureList(0), numOfClasses(-1), classVariable(0) {}
     ~DatasetMetadata() {
         for (Feature* f : featureList)
             if (f) delete f;
