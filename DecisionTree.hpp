@@ -40,6 +40,7 @@ private:
     int stopThreshold;
     
     void buildDecisionTree(DecisionTreeNode* root, set<int>& featureIndices);
+    double predictDecisionTree(DecisionTreeNode* root, const Instance* instance) const;
     void printDecisionTree(DecisionTreeNode* node, int level, stringstream& ss) const;
     
 public:
@@ -54,6 +55,7 @@ public:
         return metadata;
     }
     
+    string predict(const Instance* instance) const;
     string toString() const;
 };
 

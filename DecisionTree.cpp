@@ -105,3 +105,16 @@ string DecisionTree::toString() const {
         printDecisionTree(root->children[i], 0, ss);
     return ss.str();
 }
+
+double DecisionTree::predictDecisionTree(DecisionTreeNode* root, const Instance* instance) const {
+    if (!root->split)
+        return root->classLabel;
+    
+    int idx = root->split->split(instance);
+    DecisionTreeNode* next = root->children[idx];
+    return predictDecisionTree(next, instance);
+}
+
+string DecisionTree::predict(const Instance* instance) const {
+    return metadata->classVariable->convertInternalToValue(predictDecisionTree(root, instance));
+}

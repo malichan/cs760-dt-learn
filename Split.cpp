@@ -61,12 +61,22 @@ Split* Split::createSplit(int featureIndex, const DatasetMetadata* metadata, con
         }
         sort(sortedInsts.begin(), sortedInsts.end());
         
-        vector<double> candidates;
+        vector<pair<double, int> > sortedSets;
+        sortedSets.push_back(sortedInsts[0]);
         for (int i = 1; i < instances.size(); ++i) {
-            if (sortedInsts[i].second != sortedInsts[i - 1].second) {
-                double mid = (sortedInsts[i].first + sortedInsts[i - 1].first) * 0.5;
-                if (candidates.empty() || candidates.back() != mid)
-                    candidates.push_back(mid);
+            if (sortedInsts[i].first == sortedSets.back().first) {
+                if (sortedSets.back().second != -1 && sortedInsts[i].second != sortedSets.back().second)
+                    sortedSets.back().second = -1;
+            } else {
+                sortedSets.push_back(sortedInsts[i]);
+            }
+        }
+        
+        vector<double> candidates;
+        for (int i = 1; i < sortedSets.size(); ++i) {
+            if (sortedSets[i].second != sortedSets[i - 1].second || sortedSets[i].second == -1) {
+                double mid = (sortedSets[i].first + sortedSets[i - 1].first) * 0.5;
+                candidates.push_back(mid);
             }
         }
         

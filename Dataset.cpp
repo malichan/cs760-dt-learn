@@ -48,6 +48,32 @@ static vector<string> tokenize(const string& str) {
     return tokens;
 }
 
+static istream& safeGetline(istream& is, string& t)
+{
+    t.clear();
+    
+    istream::sentry se(is, true);
+    streambuf* sb = is.rdbuf();
+    
+    while (true) {
+        int c = sb->sbumpc();
+        switch (c) {
+            case '\n':
+                return is;
+            case '\r':
+                if(sb->sgetc() == '\n')
+                    sb->sbumpc();
+                return is;
+            case EOF:
+                if(t.empty())
+                    is.setstate(ios::eofbit);
+                return is;
+            default:
+                t += (char)c;
+        }
+    }
+}
+
 Dataset* Dataset::loadDataset(string trainFile, string testFile) {
     ifstream finTrain, finTest;
     finTrain.open(trainFile);
@@ -60,8 +86,7 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
     string line;
     int numOfFeatures = 0;
     bool header = true;
-    while (finTrain.good()) {
-        getline(finTrain, line);
+    while (!safeGetline(finTrain, line).eof()) {
         removeComment(line);
         if (line.empty())
             continue;
@@ -73,7 +98,7 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
             } else if (lineType == "@attribute") {
                 string featureName = tokens[1];
                 string featureType = toLower(tokens[2]);
-                if (featureName == "class") {
+                if (toLower(featureName) == "class") {
                     vector<string> vals(tokens.begin() + 2, tokens.end());
                     Feature* f = new NominalFeature(-1, featureName, vals);
                     dataset->metadata->classVariable = f;
@@ -103,8 +128,7 @@ Dataset* Dataset::loadDataset(string trainFile, string testFile) {
     }
     
     header = true;
-    while (finTest.good()) {
-        getline(finTest, line);
+    while (!safeGetline(finTest, line).eof()) {
         removeComment(line);
         if (line.empty())
             continue;
