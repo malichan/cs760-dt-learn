@@ -1,6 +1,8 @@
 #include "Split.hpp"
 
 #include <sstream>
+#include <cmath>
+#include <algorithm>
 
 static double computeEntropy(const vector<int>& splitCount, int& allCount) {
     int classRange = (int)splitCount.size();
