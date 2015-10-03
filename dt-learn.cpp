@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 #include <memory>
 #include <chrono>
 #include <random>
@@ -27,19 +28,20 @@ int main(int argc, const char * argv[]) {
         }
     
         DecisionTree tree(metadata, trainSet, stopThreshold);
-        cout << tree.toString() << endl;
+        cout << tree.toString();
     
         const vector<Instance*>& testSet = dataset->getTestSet();
         int correctCount = 0;
-        cout << "# Predicted Actual" << endl;
+        cout << "<Predictions for the Test Set Instances>" << endl;
         for (int i = 0; i < testSet.size(); ++i) {
             Instance* inst = testSet[i];
             string predicted = tree.predict(inst);
             string actual = inst->toString(metadata, true);
             if (predicted == actual)
                 correctCount++;
-            cout << predicted << " " << actual << endl;
+            cout << setfill(' ') << setw(3) << (i + 1) << ": ";
+            cout << "Actual: " << actual << "  Predicted: " << predicted<< endl;
         }
-        cout << "# Accuracy: " << correctCount << "/" << testSet.size() << endl;
+        cout << "Number of correctly classified: " << correctCount << "  Total number of test instances: " << testSet.size() << endl;
     }
 }

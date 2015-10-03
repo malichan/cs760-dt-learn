@@ -22,7 +22,7 @@ string DecisionTreeNode::toString() const {
 void DecisionTree::buildDecisionTree(DecisionTreeNode* root, set<int>& featureIndices) {
     root->classCount.resize(metadata->numOfClasses);
     if (root->instances.empty()) {
-        root->classLabel = root->parent->classLabel;
+        root->classLabel = 0;
         return;
     }
     
@@ -94,7 +94,7 @@ DecisionTree::DecisionTree(const DatasetMetadata* metadata, const vector<Instanc
 
 void DecisionTree::printDecisionTree(DecisionTreeNode* node, int level, stringstream& ss) const {
     for (int i = 0; i < level; ++i)
-        ss << "|\t";
+        ss << "|       ";
     ss << node->toString() << endl;
     for (int i = 0; i < node->children.size(); ++i)
         printDecisionTree(node->children[i], level + 1, ss);
